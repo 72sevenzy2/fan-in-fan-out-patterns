@@ -7,18 +7,19 @@ import (
 
 func worker(id int, ch chan<- string) {
 	for range 3 {
-		ch <- fmt.Sprintf("received work with id %d", id)
+		ch <- fmt.Sprintf("work received with id %d", id)
 	}
 	close(ch)
 }
 
-func fanin(wg *sync.WaitGroup, channels ...<-chan string) <-chan string {
+func fanin(wg *sync.WaitGroup, ch ...<-chan string) <-chan string {
 	out := make(chan string)
-	wg.Add(len(channels))
-	for _, value := range channels {
-		go func (val <-chan string)  {
+	wg.Add(len(ch))
+	
+	for _, value := range ch {
+		go func (ch <-chan string)  {
 			defer wg.Done()
-			for i := range val {
+			for i := range ch {
 				out <- i
 			}
 		}(value)
@@ -36,7 +37,7 @@ func main() {
 	ch1 := make(chan string)
 	ch2 := make(chan string)
 
-	var wg sync.WaitGroup;
+	var wg sync.WaitGroup
 
 	go worker(1, ch1)
 	go worker(2, ch2)
